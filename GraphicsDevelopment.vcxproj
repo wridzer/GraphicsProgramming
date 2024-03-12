@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include\KHR;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include\GLFW;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include\glad;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\lib\GLFW;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include\KHR;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include\GLFW;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include\glad;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include;$(LocalDebuggerWorkingDirectory)include\glad;$(LocalDebuggerWorkingDirectory)include\GLFW;$(LocalDebuggerWorkingDirectory)include\KHR;$(LocalDebuggerWorkingDirectory)include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\lib\GLFW;$(LocalDebuggerWorkingDirectory)lib;$(LocalDebuggerWorkingDirectory)\lib\GLFW;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
