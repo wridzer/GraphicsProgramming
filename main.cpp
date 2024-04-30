@@ -56,6 +56,8 @@ int main()
 
     glUniform3fv(glGetUniformLocation(ourShader.ID, "lightPosition"), 1, glm::value_ptr(lightPos));
 
+    glUniform1f(glGetUniformLocation(ourShader.ID, "borderScale"), 0.05f);
+
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
