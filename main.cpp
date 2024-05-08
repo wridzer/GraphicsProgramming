@@ -31,20 +31,23 @@ int main()
     unsigned int VAO, EBO;
     CreateCube(VAO, EBO, size, numIndeces);
 
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+
     unsigned int boxTexture = loadTexture("Textures/container2.png");
     unsigned int boxNormal = loadTexture("Textures/container2_normal.png");
 
     // Matrices
+    glm::vec3 lightPos(5.0f, 3.0f, -3.0f);
+    glm::vec3 cameraPosition = glm::vec3(0.0f, 2.5f, -5.0f);
+
     glm::mat4 world = glm::mat4(1.0f);
     world = glm::rotate(world, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     world = glm::scale(world, glm::vec3(1.0f, 1.0f, 1.0f));
     world = glm::translate(world, glm::vec3(0.0f, 0.0f, 0.0f));
 
-    glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 2.5f, -5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
+    glm::mat4 view = glm::lookAt(cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-
-    glm::vec3 lightPos(3.0f, 5.0f, 1.0f);
 
     ourShader.use();
     glUniform1i(glGetUniformLocation(ourShader.ID, "mainTex"), 0);
@@ -55,8 +58,9 @@ int main()
     glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     glUniform3fv(glGetUniformLocation(ourShader.ID, "lightPosition"), 1, glm::value_ptr(lightPos));
+    glUniform3fv(glGetUniformLocation(ourShader.ID, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
 
-    glUniform1f(glGetUniformLocation(ourShader.ID, "borderScale"), 0.05f);
+    glUniform1f(glGetUniformLocation(ourShader.ID, "borderScale"), 0.05f); // step function
 
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -69,7 +73,7 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "world"), 1, GL_FALSE, glm::value_ptr(world));
 
         // Rendering
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
     
         glActiveTexture(GL_TEXTURE0);
