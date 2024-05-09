@@ -31,6 +31,9 @@ int main()
     unsigned int VAO, EBO;
     CreateCube(VAO, EBO, size, numIndeces);
 
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+
     unsigned int boxTexture = loadTexture("Textures/container2.png");
     unsigned int boxNormal = loadTexture("Textures/container2_normal.png");
 
