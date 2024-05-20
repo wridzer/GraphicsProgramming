@@ -12,11 +12,46 @@
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+// Forward declarations
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window, glm::mat4 &world);
+void processInput(GLFWwindow* window);
 int init(GLFWwindow*& window);
-void CreateCube(unsigned int& VAO,unsigned int& EBO, int& size, int& numIndeces);
-unsigned int loadTexture(const char* path);
+void CreateCube();
+unsigned int loadTexture(const char* path, int comp = 0);
+void RenderSkybox(Shader &skyboxShader);
+void RenderTerrain(Shader& skyboxShader);
+void CheckGLError(const std::string& location);
+unsigned int GeneratePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
+
+// Window callbacks
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+
+//input
+bool keys[1024];
+
+// Global positions
+glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
+glm::vec3 cameraPosition = glm::vec3(100.0f, 125.0f, 100.0f);
+
+// Camera variables
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
+float fov = 45.0f;
+float sensitivity = 0.5f;
+glm::quat camQuat = glm::quat(glm::vec3(0, 0, 0));
+float camYaw, camPitch;
+
+// Global variables
+unsigned int boxVAO, boxEBO;
+int boxSize, boxNumIndeces;
+glm::mat4 view, projection;
+
+// Terrain variables
+unsigned int terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
+unsigned char* heightmapTexture;
+unsigned int dirtTexture, grassTexture, rockTexture, snowTexture, sandTexture;
 
 int main()
 {
@@ -25,40 +60,33 @@ int main()
     if (result != 0) return result;
 
     // build and compile our shader program
-    Shader ourShader("VertexShader.glsl", "FractalShader.glsl");
+    Shader SkyboxShader("Shaders/SkyVertexShader.glsl", "Shaders/SkyFractalShader.glsl");
+    Shader TerrainShader("Shaders/TerrainVertexShader.glsl", "Shaders/TerrainFractalShader.glsl");
+    
+    SkyboxShader.use();
+    TerrainShader.use();
 
-    int size, numIndeces;
-    unsigned int VAO, EBO;
-    CreateCube(VAO, EBO, size, numIndeces);
+    CreateCube();
+    terrainVAO = GeneratePlane("Textures/Heightmap2.png", heightmapTexture, GL_RGBA, 4, 300.0f, 5.0f, terrainIndexCount, heightmapID);
 
-    glCullFace(GL_BACK);
-    glEnable(GL_CULL_FACE);
-
-    unsigned int boxTexture = loadTexture("Textures/container2.png");
-    unsigned int boxNormal = loadTexture("Textures/container2_normal.png");
+    // Load textures
+    heightNormalID = loadTexture("Textures/heightnormal.png");
+    dirtTexture = loadTexture("Textures/dirt.jpg");
+    grassTexture = loadTexture("Textures/grass.png", 4);
+    rockTexture = loadTexture("Textures/rock.jpg");
+    snowTexture = loadTexture("Textures/snow.jpg");
+    sandTexture = loadTexture("Textures/sand.jpg");
+    glUniform1i(glGetUniformLocation(TerrainShader.ID, "mainTex"), 0);
+    glUniform1i(glGetUniformLocation(TerrainShader.ID, "normalTex"), 1);
+    glUniform1i(glGetUniformLocation(TerrainShader.ID, "dirt"), 2);
+    glUniform1i(glGetUniformLocation(TerrainShader.ID, "grass"), 3);
+    glUniform1i(glGetUniformLocation(TerrainShader.ID, "rock"), 4);
+    glUniform1i(glGetUniformLocation(TerrainShader.ID, "snow"), 5);
+    glUniform1i(glGetUniformLocation(TerrainShader.ID, "sand"), 6);
 
     // Matrices
-    glm::vec3 lightPos(5.0f, 3.0f, -3.0f);
-    glm::vec3 cameraPosition = glm::vec3(0.0f, 2.5f, -5.0f);
-
-    glm::mat4 world = glm::mat4(1.0f);
-    world = glm::rotate(world, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    world = glm::scale(world, glm::vec3(1.0f, 1.0f, 1.0f));
-    world = glm::translate(world, glm::vec3(0.0f, 0.0f, 0.0f));
-
-    glm::mat4 view = glm::lookAt(cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-
-    ourShader.use();
-    glUniform1i(glGetUniformLocation(ourShader.ID, "mainTex"), 0);
-    glUniform1i(glGetUniformLocation(ourShader.ID, "normalTex"), 1);
-
-    glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "world"), 1, GL_FALSE, glm::value_ptr(world));
-    glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-    glUniform3fv(glGetUniformLocation(ourShader.ID, "lightPosition"), 1, glm::value_ptr(lightPos));
-    glUniform3fv(glGetUniformLocation(ourShader.ID, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+    view = glm::lookAt(cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 5000.0f);
 
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -67,21 +95,15 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         // input
-        processInput(window, world);
-        glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "world"), 1, GL_FALSE, glm::value_ptr(world));
+        processInput(window);
 
         // Rendering
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-    
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, boxTexture);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, boxNormal);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // render the triangle
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, numIndeces, GL_UNSIGNED_INT, 0);
+        // render the box
+        RenderSkybox(SkyboxShader);
+        RenderTerrain(TerrainShader);
 
         // glfw: swap buffers and poll IO events
         glfwSwapBuffers(window);
@@ -89,7 +111,7 @@ int main()
     }
 
     // Cleanup
-    glDeleteVertexArrays(1, &VAO);
+    glDeleteVertexArrays(1, &boxVAO);
     //glDeleteBuffers(1, &VBO);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
@@ -98,15 +120,92 @@ int main()
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-void processInput(GLFWwindow* window, glm::mat4 &world)
+void processInput(GLFWwindow* window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (keys[GLFW_KEY_ESCAPE])
         glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		world = glm::rotate(world, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        world = glm::rotate(world, glm::radians(-1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    bool camChanged = false;
+    if(keys[GLFW_KEY_W])
+    {
+        cameraPosition += camQuat * glm::vec3(0, 0, 1) * sensitivity;
+        camChanged = true;
+    }
+    if(keys[GLFW_KEY_S])
+    {
+        cameraPosition += camQuat * glm::vec3(0, 0, -1) * sensitivity;
+        camChanged = true;
+    }
+    if (keys[GLFW_KEY_A])
+    {
+        cameraPosition += camQuat * glm::vec3(1, 0, 0) * sensitivity;
+        camChanged = true;
+    }
+    if (keys[GLFW_KEY_D])
+    {
+        cameraPosition += camQuat * glm::vec3(-1, 0, 0) * sensitivity;
+        camChanged = true;
+    }
+    if(keys[GLFW_KEY_SPACE])
+    {
+        cameraPosition += camQuat * glm::vec3(0, 1, 0) * sensitivity;
+        camChanged = true;
+    }
+    if(keys[GLFW_KEY_LEFT_CONTROL])
+    {
+        cameraPosition += camQuat * glm::vec3(0, -1, 0) * sensitivity;
+        camChanged = true;
+    }
+
+    if (camChanged) {
+        glm::vec3 camForward = camQuat * glm::vec3(0, 0, 1);
+        glm::vec3 camUp = camQuat * glm::vec3(0, 1, 0);
+
+        view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
+    }
+
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (action == GLFW_PRESS) {
+        keys[key] = true;
+    }
+    else if (action == GLFW_RELEASE) {
+		keys[key] = false;
+    }
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    float x = (float)xpos;
+    float y = (float)ypos;
+
+    if (firstMouse)
+    {
+		lastX = x;
+		lastY = y;
+		firstMouse = false;
+	}
+
+    float dx = lastX - x;
+    float dy = lastY - y;
+
+    lastX = x;
+    lastY = y;
+
+    camYaw += dx;
+    camPitch = glm::clamp(camPitch - dy, -90.0f, 90.0f);
+
+    if (camYaw > 180.0f) camYaw -= 360.0f;
+    if (camYaw < -180.0f) camYaw += 360.0f;
+
+    camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
+
+    glm::vec3 camForward = camQuat * glm::vec3(0, 0, 1);
+    glm::vec3 camUp = camQuat * glm::vec3(0, 1, 0);
+
+	view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -137,6 +236,10 @@ int init(GLFWwindow* &window)
         glfwTerminate();
         return -1;
     }
+    // Register callbacks
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetKeyCallback(window, key_callback);
+
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -151,7 +254,7 @@ int init(GLFWwindow* &window)
     return 0;
 }
 
-void CreateCube(unsigned int &VAO,unsigned int &EBO, int& size, int& numIndeces)
+void CreateCube()
 {
     // set up vertex data (and buffer(s)) and configure vertex attributes
     float vertices[] = {
@@ -215,18 +318,18 @@ void CreateCube(unsigned int &VAO,unsigned int &EBO, int& size, int& numIndeces)
 
     int stride = (3 + 3 + 2 + 3 + 3 + 3) * sizeof(float);
 
-    size = sizeof(vertices) / stride;
-    numIndeces = sizeof(indices) / sizeof(int);
+    boxSize = sizeof(vertices) / stride;
+    boxNumIndeces = sizeof(indices) / sizeof(int);
 
     unsigned int VBO;
-    glGenVertexArrays(1, &VAO);
+    glGenVertexArrays(1, &boxVAO);
     glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
+    glBindVertexArray(boxVAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glGenBuffers(1, &boxEBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, boxEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // position attribute
@@ -257,7 +360,7 @@ void CreateCube(unsigned int &VAO,unsigned int &EBO, int& size, int& numIndeces)
     //glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-unsigned int loadTexture(const char* path)
+unsigned int loadTexture(const char* path, int comp)
 {
     unsigned int textureID;
     glGenTextures(1, &textureID);
@@ -267,9 +370,11 @@ unsigned int loadTexture(const char* path)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, numChannels;
-    unsigned char* data = stbi_load(path, &width, &height, &numChannels, 0);
+    unsigned char* data = stbi_load(path, &width, &height, &numChannels, comp);
     if (data)
     {
+        if(comp != 0)
+            numChannels = comp ;
         GLenum format = NULL;
 		if(numChannels == 1)
 			format = GL_RED;
@@ -291,4 +396,186 @@ unsigned int loadTexture(const char* path)
     glBindTexture(GL_TEXTURE_2D, 0);
 
     return textureID;
+}
+
+void RenderSkybox(Shader &skyboxShader) {
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH);
+    glDisable(GL_DEPTH_TEST);
+
+    skyboxShader.use();
+
+    // Set up skybox
+    glm::mat4 world = glm::mat4(1.0f);
+    world = glm::translate(world, cameraPosition);
+    world = glm::scale(world, glm::vec3(10.0f, 10.0f, 10.0f));
+
+    glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "world"),      1, GL_FALSE, glm::value_ptr(world));
+    glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "view"),       1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    
+    glUniform3fv(glGetUniformLocation(skyboxShader.ID, "lightDirection"), 1, glm::value_ptr(lightDirection));
+    glUniform3fv(glGetUniformLocation(skyboxShader.ID, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
+    //Rendering
+    glBindVertexArray(boxVAO);
+    glDrawElements(GL_TRIANGLES, boxNumIndeces, GL_UNSIGNED_INT, 0);
+
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH);
+    glEnable(GL_DEPTH_TEST);
+}
+
+void CheckGLError(const std::string& location)
+{
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR)
+    {
+        std::cout << "OpenGL error at " << location << ": " << err << std::endl;
+    }
+}
+
+void RenderTerrain(Shader& terrainShader) {
+    glEnable(GL_DEPTH);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    terrainShader.use();
+
+    // Set up terrain
+    glm::mat4 world = glm::mat4(1.0f);
+
+    glUniformMatrix4fv(glGetUniformLocation(terrainShader.ID, "world"), 1, GL_FALSE, glm::value_ptr(world));
+    glUniformMatrix4fv(glGetUniformLocation(terrainShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(terrainShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+    float t = glfwGetTime();
+    lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
+    glUniform3fv(glGetUniformLocation(terrainShader.ID, "lightDirection"), 1, glm::value_ptr(lightDirection));
+    glUniform3fv(glGetUniformLocation(terrainShader.ID, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, heightmapID);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, heightNormalID);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, dirtTexture);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, grassTexture);
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, rockTexture);
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, snowTexture);
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, sandTexture);
+
+    // Rendering
+    glBindVertexArray(terrainVAO);
+    glDrawElements(GL_TRIANGLES, terrainIndexCount, GL_UNSIGNED_INT, 0);
+}
+
+unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID) {
+    int width = 0, height = 0, channels;
+    if (heightmap != nullptr && data == nullptr) {
+        data = stbi_load(heightmap, &width, &height, &channels, comp);
+        if (data) {
+            glGenTextures(1, &heightmapID);
+            glBindTexture(GL_TEXTURE_2D, heightmapID);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        else {
+			std::cout << "Failed to load heightmap" << std::endl;
+		}
+    }
+
+    int stride = 8;
+    float* vertices = new float[(width * height) * stride];
+    unsigned int* indices = new unsigned int[(width - 1) * (height - 1) * 6];
+
+    int index = 0;
+    for (int i = 0; i < (width * height); i++) {
+        // calculate x/z values
+        int x = i % width;
+        int z = i / width;
+
+        float texHeight = (float)data[i * comp];
+
+        // set position
+        vertices[index++] = (float)x * xzScale;
+        vertices[index++] = (texHeight / 255.0f) * hScale;
+        vertices[index++] = (float)z * xzScale;
+
+        // set normal
+        vertices[index++] = 0;
+        vertices[index++] = 1;
+        vertices[index++] = 0;
+
+        // set uv
+        vertices[index++] = (float)x / (float)width;
+        vertices[index++] = (float)z / (float)height;
+    }
+
+    // OPTIONAL TODO: Calculate normal
+    // TODO: Set normal
+
+    index = 0;
+    for (int i = 0; i < (width - 1) * (height - 1); i++) {
+        int x = i % (width - 1);
+        int z = i / (width - 1);
+
+        int vertex = z * width + x;
+
+        indices[index++] = vertex;
+        indices[index++] = vertex + width;
+        indices[index++] = vertex + width + 1;
+
+        indices[index++] = vertex;
+        indices[index++] = vertex + width + 1;
+        indices[index++] = vertex + 1;
+    }
+
+    unsigned int vertSize = (width * height) * stride * sizeof(float);
+    indexCount = ((width - 1) * (height - 1) * 6);
+
+    unsigned int VAO, VBO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertSize, vertices, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+
+    // vertex information!
+    // position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, 0);
+    glEnableVertexAttribArray(0);
+    // normal
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * 3));
+    glEnableVertexAttribArray(1);
+    // uv
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * 6));
+    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(0);
+
+    delete[] vertices;
+    delete[] indices;
+
+    heightmapTexture = data;
+    //stbi_image_free(data);
+
+    return VAO;
 }

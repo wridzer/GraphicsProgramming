@@ -77,6 +77,10 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
 
+    // print the vertex and fragment shader code for error checking
+    //std::cout << "Vertex Shader Code:\n" << vertexCode << std::endl;
+    //std::cout << "Fragment Shader Code:\n" << fragmentCode << std::endl;
+
     // delete the shaders as they're linked into our program now and no longer necessary
     glDeleteShader(vertex);
     glDeleteShader(fragment);

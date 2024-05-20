@@ -8,7 +8,7 @@ in mat3 TBN;
  
 uniform sampler2D mainTex;
 uniform sampler2D normalTex;
-uniform vec3 lightPosition;
+uniform vec3 lightDirection;
 uniform vec3 cameraPosition;
 
 
@@ -20,7 +20,7 @@ void main()
     normal = normal * TBN;
 
     // Light
-    vec3 lightDir = normalize(lightPosition - pixelCoord);
+    vec3 lightDir = normalize(lightDirection - pixelCoord);
     float lightValue = max(dot(normal, lightDir), 0.0f);
 
     // Specular data

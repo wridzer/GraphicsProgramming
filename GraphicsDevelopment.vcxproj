@@ -141,8 +141,12 @@
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="FractalShader.glsl" />
-    <None Include="VertexShader.glsl" />
+    <None Include="Shaders\FractalShader.glsl" />
+    <None Include="Shaders\SkyFractalShader.glsl" />
+    <None Include="Shaders\SkyVertexShader.glsl" />
+    <None Include="Shaders\TerrainFractalShader.glsl" />
+    <None Include="Shaders\TerrainVertexShader.glsl" />
+    <None Include="Shaders\VertexShader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

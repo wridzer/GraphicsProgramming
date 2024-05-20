@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Shaders">
+      <UniqueIdentifier>{af711f22-c489-470c-b0fa-e3dec6a8f1b9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -34,7 +37,23 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="VertexShader.glsl" />
-    <None Include="FractalShader.glsl" />
+    <None Include="Shaders\FractalShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\SkyFractalShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\SkyVertexShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\VertexShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\TerrainFractalShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\TerrainVertexShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
