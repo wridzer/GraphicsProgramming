@@ -13,8 +13,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\Shaders">
-      <UniqueIdentifier>{af711f22-c489-470c-b0fa-e3dec6a8f1b9}</UniqueIdentifier>
+    <Filter Include="Source Files\Resources">
+      <UniqueIdentifier>{5e40f0af-f930-4c00-b28e-87021e232392}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Resources\Shaders">
+      <UniqueIdentifier>{be8533b7-8362-4ace-a894-9eb280005347}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -35,25 +38,37 @@
     <ClInclude Include="stb_image.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="mesh.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\FractalShader.glsl">
-      <Filter>Source Files\Shaders</Filter>
+    <None Include="Resources\Shaders\FractalShader.glsl">
+      <Filter>Source Files\Resources\Shaders</Filter>
     </None>
-    <None Include="Shaders\SkyFractalShader.glsl">
-      <Filter>Source Files\Shaders</Filter>
+    <None Include="Resources\Shaders\modelFragment.glsl">
+      <Filter>Source Files\Resources\Shaders</Filter>
     </None>
-    <None Include="Shaders\SkyVertexShader.glsl">
-      <Filter>Source Files\Shaders</Filter>
+    <None Include="Resources\Shaders\modelVertex.glsl">
+      <Filter>Source Files\Resources\Shaders</Filter>
     </None>
-    <None Include="Shaders\VertexShader.glsl">
-      <Filter>Source Files\Shaders</Filter>
+    <None Include="Resources\Shaders\SkyFractalShader.glsl">
+      <Filter>Source Files\Resources\Shaders</Filter>
     </None>
-    <None Include="Shaders\TerrainFractalShader.glsl">
-      <Filter>Source Files\Shaders</Filter>
+    <None Include="Resources\Shaders\SkyVertexShader.glsl">
+      <Filter>Source Files\Resources\Shaders</Filter>
     </None>
-    <None Include="Shaders\TerrainVertexShader.glsl">
-      <Filter>Source Files\Shaders</Filter>
+    <None Include="Resources\Shaders\TerrainFractalShader.glsl">
+      <Filter>Source Files\Resources\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\TerrainVertexShader.glsl">
+      <Filter>Source Files\Resources\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\VertexShader.glsl">
+      <Filter>Source Files\Resources\Shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

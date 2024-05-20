@@ -72,7 +72,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include\KHR;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include\GLFW;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include\glad;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\include;$(LocalDebuggerWorkingDirectory)include\glad;$(LocalDebuggerWorkingDirectory)include\GLFW;$(LocalDebuggerWorkingDirectory)include\KHR;$(LocalDebuggerWorkingDirectory)include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\lib\GLFW;$(LocalDebuggerWorkingDirectory)lib;$(LocalDebuggerWorkingDirectory)\lib\GLFW;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\lib\GLFW;$(LocalDebuggerWorkingDirectory)lib;$(LocalDebuggerWorkingDirectory)\lib\assimp;$(LocalDebuggerWorkingDirectory)\lib\GLFW;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>C:\Users\wridz\Documents\GraphicsProgramming\include\KHR;C:\Users\wridz\Documents\GraphicsProgramming\include\glm;C:\Users\wridz\Documents\GraphicsProgramming\include\GLFW;C:\Users\wridz\Documents\GraphicsProgramming\include\glad;C:\Users\wridz\Documents\GraphicsProgramming\include\assimp;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\wridz\Documents\GraphicsProgramming\lib\GLFW;C:\Users\wridz\Documents\GraphicsProgramming\lib\assimp;C:\Users\Projectadm\Documents\Projects\GraphicsDevelopment\GraphicsDevelopment\lib\GLFW;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -85,6 +90,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(SolutionDir)Resources" "$(TargetDir)Resources\" /E /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -101,6 +109,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(SolutionDir)Resources" "$(TargetDir)Resources\" /E /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -108,12 +119,16 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\wridz\Documents\GraphicsProgramming\include\KHR;C:\Users\wridz\Documents\GraphicsProgramming\include\glm;C:\Users\wridz\Documents\GraphicsProgramming\include\GLFW;C:\Users\wridz\Documents\GraphicsProgramming\include\glad;C:\Users\wridz\Documents\GraphicsProgramming\include\assimp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(SolutionDir)Resources" "$(TargetDir)Resources\" /E /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -123,13 +138,19 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\wridz\Documents\GraphicsProgramming\include\KHR;C:\Users\wridz\Documents\GraphicsProgramming\include\glm;C:\Users\wridz\Documents\GraphicsProgramming\include\GLFW;C:\Users\wridz\Documents\GraphicsProgramming\include\glad;C:\Users\wridz\Documents\GraphicsProgramming\include\assimp;C:\Users\wridz\Documents\GraphicsProgramming\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalUsingDirectories>%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>glfw3.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(SolutionDir)Resources" "$(TargetDir)Resources\" /E /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="glad.c" />
@@ -137,16 +158,20 @@
     <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="mesh.h" />
+    <ClInclude Include="model.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\FractalShader.glsl" />
-    <None Include="Shaders\SkyFractalShader.glsl" />
-    <None Include="Shaders\SkyVertexShader.glsl" />
-    <None Include="Shaders\TerrainFractalShader.glsl" />
-    <None Include="Shaders\TerrainVertexShader.glsl" />
-    <None Include="Shaders\VertexShader.glsl" />
+    <None Include="Resources\Shaders\FractalShader.glsl" />
+    <None Include="Resources\Shaders\modelFragment.glsl" />
+    <None Include="Resources\Shaders\modelVertex.glsl" />
+    <None Include="Resources\Shaders\SkyFractalShader.glsl" />
+    <None Include="Resources\Shaders\SkyVertexShader.glsl" />
+    <None Include="Resources\Shaders\TerrainFractalShader.glsl" />
+    <None Include="Resources\Shaders\TerrainVertexShader.glsl" />
+    <None Include="Resources\Shaders\VertexShader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
