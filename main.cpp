@@ -1,13 +1,15 @@
+#pragma once
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "Shader.h"
+//#include "Shader.h"
 #include <iostream>
-//#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 //#include "stb_image.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "model.h"
+//#include "model.h"
+#include "ModelObject.h"
 
 // settings
 const unsigned int SCR_WIDTH = 1200;
@@ -59,6 +61,9 @@ unsigned int dirtTexture, grassTexture, rockTexture, snowTexture, sandTexture;
 Model* backpack;
 unsigned int backpackDiffuse, backpackSpecular, backpackNormal, backpackRoughness, backpackAO;
 
+// Object
+ModelObject* backpackObject;
+
 int main()
 {
     GLFWwindow* window;
@@ -95,21 +100,25 @@ int main()
     glUniform1i(glGetUniformLocation(TerrainShader.ID, "snow"), 5);
     glUniform1i(glGetUniformLocation(TerrainShader.ID, "sand"), 6);
 
-    // Model
-    modelShader.use();
-    backpack = new Model("Resources/backpack/backpack.obj");
+    backpackObject = new ModelObject();
+    backpackObject->LoadModel("Resources/backpack/backpack.obj");
+    backpackObject->LoadTextures("Resources/backpack/diffuse.jpg", "Resources/backpack/specular.jpg", "Resources/backpack/normal.png", "Resources/backpack/roughness.jpg", "Resources/backpack/ao.jpg");
 
-    // Load model textures
-    backpackDiffuse = loadTexture("Resources/backpack/diffuse.jpg");
-    backpackSpecular = loadTexture("Resources/backpack/specular.jpg");
-    backpackNormal = loadTexture("Resources/backpack/normal.png");
-    backpackRoughness = loadTexture("Resources/backpack/roughness.jpg");
-    backpackAO = loadTexture("Resources/backpack/ao.jpg");
-    glUniform1i(glGetUniformLocation(modelShader.ID, "diffuseTexture1"), 0);
-    glUniform1i(glGetUniformLocation(modelShader.ID, "specularTexture1"), 1);
-    glUniform1i(glGetUniformLocation(modelShader.ID, "normalTexture1"), 2);
-    glUniform1i(glGetUniformLocation(modelShader.ID, "roughness1"), 3);
-    glUniform1i(glGetUniformLocation(modelShader.ID, "ao1"), 4);
+    //// Model
+    //modelShader.use();
+    //backpack = new Model("Resources/backpack/backpack.obj");
+
+    //// Load model textures
+    //backpackDiffuse = loadTexture("Resources/backpack/diffuse.jpg");
+    //backpackSpecular = loadTexture("Resources/backpack/specular.jpg");
+    //backpackNormal = loadTexture("Resources/backpack/normal.png");
+    //backpackRoughness = loadTexture("Resources/backpack/roughness.jpg");
+    //backpackAO = loadTexture("Resources/backpack/ao.jpg");
+    //glUniform1i(glGetUniformLocation(modelShader.ID, "diffuseTexture1"), 0);
+    //glUniform1i(glGetUniformLocation(modelShader.ID, "specularTexture1"), 1);
+    //glUniform1i(glGetUniformLocation(modelShader.ID, "normalTexture1"), 2);
+    //glUniform1i(glGetUniformLocation(modelShader.ID, "roughness1"), 3);
+    //glUniform1i(glGetUniformLocation(modelShader.ID, "ao1"), 4);
 
 
     // Matrices
@@ -134,12 +143,13 @@ int main()
         // rendering
         RenderSkybox(SkyboxShader);
         RenderTerrain(TerrainShader);
-        RenderModel(
-            modelShader,
-            backpack,
-           glm::vec3(100.0f, 100.0f, 100.0f),
-           glm::vec3(0.0f, -time, 0.0f),
-           glm::vec3(10.0f, 10.0f, 10.0f));
+        backpackObject->Draw(&modelShader, lightDirection, cameraPosition, view, projection);
+        //RenderModel(
+        //    modelShader,
+        //    backpack,
+        //   glm::vec3(100.0f, 100.0f, 100.0f),
+        //   glm::vec3(0.0f, -time, 0.0f),
+        //   glm::vec3(10.0f, 10.0f, 10.0f));
 
         // glfw: swap buffers and poll IO events
         glfwSwapBuffers(window);
