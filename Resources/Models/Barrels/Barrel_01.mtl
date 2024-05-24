@@ -1,0 +1,16 @@
+# Blender 3.6.11 MTL File: 'None'
+# www.blender.org
+
+newmtl Material.015
+Ns 263.822296
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd diffuse.jpg
+map_Bump normal.jpg
+map_Ks specular.jpg
+map_Ka ao.jpg
+map_Ns roughness.jpg

@@ -33,6 +33,9 @@
     <ClCompile Include="ModelObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="NadjaFractalShader.glsl">
+      <Filter>Source Files\Resources\Shaders</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">

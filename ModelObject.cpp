@@ -12,11 +12,17 @@ ModelObject::ModelObject()
 	normalMap = 0;
 	roughnessMap = 0;
 	aoMap = 0;
+	shader = nullptr;
 }
 
 ModelObject::~ModelObject()
 {
 	delete model;
+}
+
+void ModelObject::SetShader(Shader* shader)
+{
+	this->shader = shader;
 }
 
 void ModelObject::LoadModel(const char* path, bool gamma)
@@ -33,8 +39,13 @@ void ModelObject::LoadTextures(const char* diffuse, const char* specular, const 
 	aoMap = LoadTexture(ao);
 }
 
-void ModelObject::Draw(Shader* shader, glm::vec3 lightDirection, glm::vec3 cameraPosition, glm::mat4 view, glm::mat4 projection)
+void ModelObject::Draw(glm::vec3 lightDirection, glm::vec3 cameraPosition, glm::mat4 view, glm::mat4 projection)
 {
+	if(shader == nullptr)
+	{
+		std::cout << "No shader set" << std::endl;
+		return;
+	}
 	shader->use();
 	shader->setInt("material.diffuse", 0);
 	shader->setInt("material.specular", 1);

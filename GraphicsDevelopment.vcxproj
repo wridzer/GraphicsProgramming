@@ -169,6 +169,7 @@
     <None Include="Resources\Shaders\FractalShader.glsl" />
     <None Include="Resources\Shaders\modelFragment.glsl" />
     <None Include="Resources\Shaders\modelVertex.glsl" />
+    <None Include="Resources\Shaders\NadjaFractalShader.glsl" />
     <None Include="Resources\Shaders\SkyFractalShader.glsl" />
     <None Include="Resources\Shaders\SkyVertexShader.glsl" />
     <None Include="Resources\Shaders\TerrainFractalShader.glsl" />

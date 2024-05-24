@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 //#include "model.h"
 #include "ModelObject.h"
+#include <vector>
 
 // settings
 const unsigned int SCR_WIDTH = 1200;
@@ -25,7 +26,6 @@ void CheckGLError(const std::string& location);
 unsigned int GeneratePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
 void RenderSkybox(Shader &skyboxShader);
 void RenderTerrain(Shader& skyboxShader);
-void RenderModel(Shader& modelShader, Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale);
 
 // Window callbacks
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -57,12 +57,11 @@ unsigned int terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
 unsigned char* heightmapTexture;
 unsigned int dirtTexture, grassTexture, rockTexture, snowTexture, sandTexture;
 
-// Model variables
-Model* backpack;
-unsigned int backpackDiffuse, backpackSpecular, backpackNormal, backpackRoughness, backpackAO;
-
-// Object
+// Objects
 ModelObject* backpackObject;
+ModelObject* barrelObject, *barrelObject1, *barrelObject2;
+ModelObject* vaseObject, *vaseObject1, *vaseObject2, *vaseObject3, *vaseObject4;
+std::vector<ModelObject*> objectVec = std::vector<ModelObject*>();
 
 int main()
 {
@@ -76,6 +75,7 @@ int main()
     Shader SkyboxShader("Resources/Shaders/SkyVertexShader.glsl", "Resources/Shaders/SkyFractalShader.glsl");
     Shader TerrainShader("Resources/Shaders/TerrainVertexShader.glsl", "Resources/Shaders/TerrainFractalShader.glsl");
     Shader modelShader("Resources/Shaders/modelVertex.glsl", "Resources/Shaders/modelFragment.glsl");
+    Shader nadjaShader("Resources/Shaders/modelVertex.glsl", "Resources/Shaders/NadjaFractalShader.glsl");
 
     // Skybox
     SkyboxShader.use();
@@ -100,26 +100,112 @@ int main()
     glUniform1i(glGetUniformLocation(TerrainShader.ID, "snow"), 5);
     glUniform1i(glGetUniformLocation(TerrainShader.ID, "sand"), 6);
 
+    //backpack
     backpackObject = new ModelObject();
+    backpackObject->SetShader(&modelShader);
     backpackObject->LoadModel("Resources/backpack/backpack.obj");
     backpackObject->LoadTextures("Resources/backpack/diffuse.jpg", "Resources/backpack/specular.jpg", "Resources/backpack/normal.png", "Resources/backpack/roughness.jpg", "Resources/backpack/ao.jpg");
+    backpackObject->pos = glm::vec3(100.0f, 100.0f, 100.0f);
+    backpackObject->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    objectVec.push_back(backpackObject);
 
-    //// Model
-    //modelShader.use();
-    //backpack = new Model("Resources/backpack/backpack.obj");
+    //barrels
+    barrelObject = new ModelObject();
+    barrelObject->SetShader(&nadjaShader);
+    barrelObject->LoadModel("Resources/Models/Barrels/Barrel_01.obj");
+    barrelObject->LoadTextures("Resources/Models/Barrels/diffuse.jpg",
+        "Resources/Models/Barrels/specular.jpg",
+        "Resources/Models/Barrels/normal.jpg",
+        "Resources/Models/Barrels/roughness.jpg",
+        "Resources/Models/Barrels/ao.jpg");
+    barrelObject->pos = glm::vec3(150.0f, 100.0f, 100.0f);
+    barrelObject->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    objectVec.push_back(barrelObject);
 
-    //// Load model textures
-    //backpackDiffuse = loadTexture("Resources/backpack/diffuse.jpg");
-    //backpackSpecular = loadTexture("Resources/backpack/specular.jpg");
-    //backpackNormal = loadTexture("Resources/backpack/normal.png");
-    //backpackRoughness = loadTexture("Resources/backpack/roughness.jpg");
-    //backpackAO = loadTexture("Resources/backpack/ao.jpg");
-    //glUniform1i(glGetUniformLocation(modelShader.ID, "diffuseTexture1"), 0);
-    //glUniform1i(glGetUniformLocation(modelShader.ID, "specularTexture1"), 1);
-    //glUniform1i(glGetUniformLocation(modelShader.ID, "normalTexture1"), 2);
-    //glUniform1i(glGetUniformLocation(modelShader.ID, "roughness1"), 3);
-    //glUniform1i(glGetUniformLocation(modelShader.ID, "ao1"), 4);
+    barrelObject1 = new ModelObject();
+    barrelObject1->SetShader(&nadjaShader);
+    barrelObject1->LoadModel("Resources/Models/Barrels/Barrel_02.obj");
+    barrelObject1->LoadTextures("Resources/Models/Barrels/diffuse.jpg",
+		"Resources/Models/Barrels/specular.jpg",
+		"Resources/Models/Barrels/normal.jpg",
+		"Resources/Models/Barrels/roughness.jpg",
+		"Resources/Models/Barrels/ao.jpg");
+    barrelObject1->pos = glm::vec3(200.0f, 100.0f, 100.0);
+    barrelObject1->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    objectVec.push_back(barrelObject1);
 
+    barrelObject2 = new ModelObject();
+    barrelObject2->SetShader(&nadjaShader);
+    barrelObject2->LoadModel("Resources/Models/Barrels/Barrel_03.obj");
+    barrelObject2->LoadTextures("Resources/Models/Barrels/diffuse.jpg",
+        "Resources/Models/Barrels/specular.jpg",
+        "Resources/Models/Barrels/normal.jpg",
+        "Resources/Models/Barrels/roughness.jpg",
+        "Resources/Models/Barrels/ao.jpg");
+    barrelObject2->pos = glm::vec3(250.0f, 100.0, 100.0);
+    barrelObject2->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    objectVec.push_back(barrelObject2);
+
+    //vase
+    vaseObject = new ModelObject();
+    vaseObject->SetShader(&nadjaShader);
+    vaseObject->LoadModel("Resources/Models/Pots/Pot_01.obj");
+    vaseObject->LoadTextures("Resources/Models/Pots/Pots_group_Material.018_BaseColor.jpeg",
+        "Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
+        "Resources/Models/Pots/Pots_group_Material.018_Normal.jpeg",
+        "Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
+        "Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg");
+    vaseObject->pos = glm::vec3(300.0f, 100.0, 100.0);
+    vaseObject->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    objectVec.push_back(vaseObject);
+
+    vaseObject1 = new ModelObject();
+    vaseObject1->SetShader(&nadjaShader);
+    vaseObject1->LoadModel("Resources/Models/Pots/Pot_02.obj");
+    vaseObject1->LoadTextures("Resources/Models/Pots/Pots_group_Material.018_BaseColor.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_Normal.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg");
+    vaseObject1->pos = glm::vec3(350.0f, 100.0, 100.0);
+    vaseObject1->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    objectVec.push_back(vaseObject1);
+
+    vaseObject2 = new ModelObject();
+    vaseObject2->SetShader(&nadjaShader);
+    vaseObject2->LoadModel("Resources/Models/Pots/Pot_03.obj");
+    vaseObject2->LoadTextures("Resources/Models/Pots/Pots_group_Material.018_BaseColor.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_Normal.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg");
+    vaseObject2->pos = glm::vec3(400.0f, 100.0, 100.0);
+    vaseObject2->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    objectVec.push_back(vaseObject2);
+
+    vaseObject3 = new ModelObject();
+    vaseObject3->SetShader(&nadjaShader);
+    vaseObject3->LoadModel("Resources/Models/Pots/Pot_04.obj");
+    vaseObject3->LoadTextures("Resources/Models/Pots/Pots_group_Material.018_BaseColor.jpeg",
+        "Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
+        "Resources/Models/Pots/Pots_group_Material.018_Normal.jpeg",
+        "Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
+        "Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg");
+    vaseObject3->pos = glm::vec3(450.0f, 100.0, 100.0);
+    vaseObject3->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    objectVec.push_back(vaseObject3);
+
+    vaseObject4 = new ModelObject();
+    vaseObject4->SetShader(&nadjaShader);
+    vaseObject4->LoadModel("Resources/Models/Pots/Pot_05.obj");
+    vaseObject4->LoadTextures("Resources/Models/Pots/Pots_group_Material.018_BaseColor.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_Normal.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
+		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg");
+    vaseObject4->pos = glm::vec3(500.0f, 100.0, 100.0);
+    vaseObject4->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    objectVec.push_back(vaseObject4);
 
     // Matrices
     view = glm::lookAt(cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -143,13 +229,11 @@ int main()
         // rendering
         RenderSkybox(SkyboxShader);
         RenderTerrain(TerrainShader);
-        backpackObject->Draw(&modelShader, lightDirection, cameraPosition, view, projection);
-        //RenderModel(
-        //    modelShader,
-        //    backpack,
-        //   glm::vec3(100.0f, 100.0f, 100.0f),
-        //   glm::vec3(0.0f, -time, 0.0f),
-        //   glm::vec3(10.0f, 10.0f, 10.0f));
+        for (size_t i = 0; i < objectVec.size(); i++)
+        {
+            objectVec[i]->rot = glm::vec3(0.0f, -time, 0.0f);
+            objectVec[i]->Draw(lightDirection, cameraPosition, view, projection);
+        }
 
         // glfw: swap buffers and poll IO events
         glfwSwapBuffers(window);
@@ -521,57 +605,6 @@ void RenderTerrain(Shader& terrainShader) {
     glDrawElements(GL_TRIANGLES, terrainIndexCount, GL_UNSIGNED_INT, 0);
 }
 
-void RenderModel(Shader& modelShader, Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale)
-{
-    //glEnable(GL_BLEND);
-    // alpha blending
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // Additive blending
-    //glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
-    // Multiplicative blending
-    //glBlendFunc(GL_DST_COLOR, GL_ZERO);
-    // double blending
-    //glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
-
-    glEnable(GL_DEPTH);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
-	modelShader.use();
-
-	// Set up model
-	glm::mat4 world = glm::mat4(1.0f);
-	world = glm::translate(world, pos);
-    world = world * glm::mat4(glm::quat(rot));
-	world = glm::scale(world,scale);
-
-	glUniformMatrix4fv(glGetUniformLocation(modelShader.ID, "world"), 1, GL_FALSE, glm::value_ptr(world));
-	glUniformMatrix4fv(glGetUniformLocation(modelShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(modelShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-	//float t = glfwGetTime();
-	//lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
-	glUniform3fv(glGetUniformLocation(modelShader.ID, "lightDirection"), 1, glm::value_ptr(lightDirection));
-	glUniform3fv(glGetUniformLocation(modelShader.ID, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, backpackDiffuse);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, backpackSpecular);
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, backpackNormal);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, backpackRoughness);
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, backpackAO);
-
-	// Rendering
-	model->Draw(modelShader.ID);
-
-    glDisable(GL_BLEND);
-}
-
 unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID) {
     int width = 0, height = 0, channels;
     if (heightmap != nullptr && data == nullptr) {
@@ -675,4 +708,44 @@ unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum f
     //stbi_image_free(data);
 
     return VAO;
+}
+
+unsigned int TextureFromFile(const char* path, const string& directory, bool gamma)
+{
+    string filename = string(path);
+    filename = directory + '/' + filename;
+
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
 }
