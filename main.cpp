@@ -18,7 +18,7 @@ const unsigned int SCR_HEIGHT = 900;
 
 // Forward declarations
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window, float deltaTime);
 int init(GLFWwindow*& window);
 void CreateCube();
 unsigned int loadTexture(const char* path, int comp = 0);
@@ -36,14 +36,14 @@ bool keys[1024];
 
 // Global positions
 glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
-glm::vec3 cameraPosition = glm::vec3(500.0f, 400.0f, 500.0f);
+glm::vec3 cameraPosition = glm::vec3(782.9f, 78.5f, 702.8f);
 
 // Camera variables
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 float fov = 45.0f;
-float sensitivity = 0.5f;
+float sensitivity = 15.0f;
 glm::quat camQuat = glm::quat(glm::vec3(0, 0, 0));
 float camYaw, camPitch;
 
@@ -51,6 +51,7 @@ float camYaw, camPitch;
 unsigned int boxVAO, boxEBO;
 int boxSize, boxNumIndeces;
 glm::mat4 view, projection;
+float globalTime = 0.0f;
 
 // Terrain variables
 unsigned int terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
@@ -105,8 +106,9 @@ int main()
     backpackObject->SetShader(&modelShader);
     backpackObject->LoadModel("Resources/backpack/backpack.obj");
     backpackObject->LoadTextures("Resources/backpack/diffuse.jpg", "Resources/backpack/specular.jpg", "Resources/backpack/normal.png", "Resources/backpack/roughness.jpg", "Resources/backpack/ao.jpg");
-    backpackObject->pos = glm::vec3(100.0f, 100.0f, 100.0f);
-    backpackObject->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    backpackObject->pos = glm::vec3(808.0f, 58.0f, 741.0f);
+    backpackObject->scale = glm::vec3(2.0f, 2.0f, 2.0f);
+    backpackObject->rot = glm::vec3(0.0f, -85.0f, 6.0f);
     objectVec.push_back(backpackObject);
 
     //barrels
@@ -118,8 +120,9 @@ int main()
         "Resources/Models/Barrels/normal.jpg",
         "Resources/Models/Barrels/roughness.jpg",
         "Resources/Models/Barrels/ao.jpg");
-    barrelObject->pos = glm::vec3(150.0f, 100.0f, 100.0f);
-    barrelObject->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    barrelObject->pos = glm::vec3(813.0f, 55.0f, 737.0f);
+    barrelObject->scale = glm::vec3(10.0f, 10.0f, 10.0f);
+    barrelObject->rot = glm::vec3(0.0f, 0.0f, 20.0f);
     objectVec.push_back(barrelObject);
 
     barrelObject1 = new ModelObject();
@@ -130,8 +133,8 @@ int main()
 		"Resources/Models/Barrels/normal.jpg",
 		"Resources/Models/Barrels/roughness.jpg",
 		"Resources/Models/Barrels/ao.jpg");
-    barrelObject1->pos = glm::vec3(200.0f, 100.0f, 100.0);
-    barrelObject1->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    barrelObject1->pos = glm::vec3(825.0f, 54.0f, 734.0f);
+    barrelObject1->scale = glm::vec3(10.0f, 10.0f, 10.0f);
     objectVec.push_back(barrelObject1);
 
     barrelObject2 = new ModelObject();
@@ -142,8 +145,8 @@ int main()
         "Resources/Models/Barrels/normal.jpg",
         "Resources/Models/Barrels/roughness.jpg",
         "Resources/Models/Barrels/ao.jpg");
-    barrelObject2->pos = glm::vec3(250.0f, 100.0, 100.0);
-    barrelObject2->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    barrelObject2->pos = glm::vec3(820.0f, 52.0f, 732.0f);
+    barrelObject2->scale = glm::vec3(10.0f, 10.0f, 10.0f);
     objectVec.push_back(barrelObject2);
 
     //vase
@@ -155,8 +158,8 @@ int main()
         "Resources/Models/Pots/Pots_group_Material.018_Normal.jpeg",
         "Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
         "Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg");
-    vaseObject->pos = glm::vec3(300.0f, 100.0, 100.0);
-    vaseObject->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    vaseObject->pos = glm::vec3(815.0f, 53.0f, 740.0f);
+    vaseObject->scale = glm::vec3(10.0f, 10.0f, 10.0f);
     objectVec.push_back(vaseObject);
 
     vaseObject1 = new ModelObject();
@@ -167,8 +170,8 @@ int main()
 		"Resources/Models/Pots/Pots_group_Material.018_Normal.jpeg",
 		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
 		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg");
-    vaseObject1->pos = glm::vec3(350.0f, 100.0, 100.0);
-    vaseObject1->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    vaseObject1->pos = glm::vec3(807.0f, 56.0f, 739.0f);
+    vaseObject1->scale = glm::vec3(10.0f, 10.0f, 10.0f);
     objectVec.push_back(vaseObject1);
 
     vaseObject2 = new ModelObject();
@@ -179,8 +182,8 @@ int main()
 		"Resources/Models/Pots/Pots_group_Material.018_Normal.jpeg",
 		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
 		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg");
-    vaseObject2->pos = glm::vec3(400.0f, 100.0, 100.0);
-    vaseObject2->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    vaseObject2->pos = glm::vec3(817.0f, 54.0f, 735.0f);
+    vaseObject2->scale = glm::vec3(10.0f, 10.0f, 10.0f);
     objectVec.push_back(vaseObject2);
 
     vaseObject3 = new ModelObject();
@@ -191,8 +194,8 @@ int main()
         "Resources/Models/Pots/Pots_group_Material.018_Normal.jpeg",
         "Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
         "Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg");
-    vaseObject3->pos = glm::vec3(450.0f, 100.0, 100.0);
-    vaseObject3->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    vaseObject3->pos = glm::vec3(807.0f, 52.0f, 731.0f);
+    vaseObject3->scale = glm::vec3(10.0f, 10.0f, 10.0f);
     objectVec.push_back(vaseObject3);
 
     vaseObject4 = new ModelObject();
@@ -203,8 +206,8 @@ int main()
 		"Resources/Models/Pots/Pots_group_Material.018_Normal.jpeg",
 		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg",
 		"Resources/Models/Pots/Pots_group_Material.018_OcclusionRoughnessMetallic.jpeg");
-    vaseObject4->pos = glm::vec3(500.0f, 100.0, 100.0);
-    vaseObject4->scale = glm::vec3(50.0f, 50.0f, 50.0f);
+    vaseObject4->pos = glm::vec3(796.0f, 53.3f, 737.0f);
+    vaseObject4->scale = glm::vec3(10.0f, 10.0f, 10.0f);
     objectVec.push_back(vaseObject4);
 
     // Matrices
@@ -217,10 +220,12 @@ int main()
     // render loop
     while (!glfwWindowShouldClose(window))
     {
-        float time = glfwGetTime();
+        float deltaTime = globalTime;
+        globalTime = glfwGetTime();
+        deltaTime = globalTime - deltaTime;
 
         // input
-        processInput(window);
+        processInput(window, deltaTime);
 
         // Rendering
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -231,7 +236,7 @@ int main()
         RenderTerrain(TerrainShader);
         for (size_t i = 0; i < objectVec.size(); i++)
         {
-            objectVec[i]->rot = glm::vec3(0.0f, -time, 0.0f);
+            //objectVec[i]->rot = glm::vec3(0.0f, -time, 0.0f);
             objectVec[i]->Draw(lightDirection, cameraPosition, view, projection);
         }
 
@@ -250,7 +255,7 @@ int main()
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window, float deltaTime)
 {
     if (keys[GLFW_KEY_ESCAPE])
         glfwSetWindowShouldClose(window, true);
@@ -258,40 +263,51 @@ void processInput(GLFWwindow* window)
     bool camChanged = false;
     if(keys[GLFW_KEY_W])
     {
-        cameraPosition += camQuat * glm::vec3(0, 0, 1) * sensitivity;
+        cameraPosition += camQuat * glm::vec3(0, 0, 1) * sensitivity * deltaTime;
         camChanged = true;
     }
     if(keys[GLFW_KEY_S])
     {
-        cameraPosition += camQuat * glm::vec3(0, 0, -1) * sensitivity;
+        cameraPosition += camQuat * glm::vec3(0, 0, -1) * sensitivity * deltaTime;
         camChanged = true;
     }
     if (keys[GLFW_KEY_A])
     {
-        cameraPosition += camQuat * glm::vec3(1, 0, 0) * sensitivity;
+        cameraPosition += camQuat * glm::vec3(1, 0, 0) * sensitivity * deltaTime;
         camChanged = true;
     }
     if (keys[GLFW_KEY_D])
     {
-        cameraPosition += camQuat * glm::vec3(-1, 0, 0) * sensitivity;
+        cameraPosition += camQuat * glm::vec3(-1, 0, 0) * sensitivity * deltaTime;
         camChanged = true;
     }
     if(keys[GLFW_KEY_SPACE])
     {
-        cameraPosition += camQuat * glm::vec3(0, 1, 0) * sensitivity;
+        cameraPosition += camQuat * glm::vec3(0, 1, 0) * sensitivity * deltaTime;
         camChanged = true;
     }
     if(keys[GLFW_KEY_LEFT_CONTROL])
     {
-        cameraPosition += camQuat * glm::vec3(0, -1, 0) * sensitivity;
+        cameraPosition += camQuat * glm::vec3(0, -1, 0) * sensitivity * deltaTime;
         camChanged = true;
     }
+    if (keys[GLFW_KEY_Q])
+    {
+        sensitivity -= 0.5f;
+        if(sensitivity < 0.5f) sensitivity = 0.5f;
+    }
+    if (keys[GLFW_KEY_E])
+	{
+		sensitivity += 0.5f;
+	}
 
     if (camChanged) {
         glm::vec3 camForward = camQuat * glm::vec3(0, 0, 1);
         glm::vec3 camUp = camQuat * glm::vec3(0, 1, 0);
 
         view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
+
+        std::cout << "Camera position: " << cameraPosition.x << ", " << cameraPosition.y << ", " << cameraPosition.z << std::endl;
     }
 
 }
