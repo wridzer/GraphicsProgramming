@@ -15,6 +15,8 @@ class ModelObject
 		void SetShader(Shader* shader);
 		void LoadModel(const char* path, bool gamma = false);
 		void LoadTextures(const char* diffuse, const char* specular, const char* normal, const char* roughness, const char* ao);
+		void LoadTextures(const char* diffuse);
+		void LoadTextures(const char* diffuse, const char* ao);
 		void Draw(glm::vec3 lightDirection, glm::vec3 cameraPosition, glm::mat4 view, glm::mat4 projection);
 
 

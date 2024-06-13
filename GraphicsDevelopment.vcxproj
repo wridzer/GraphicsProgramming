@@ -156,12 +156,14 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ModelObject.cpp" />
+    <ClCompile Include="ObjectHierarchy.cpp" />
     <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="ModelObject.h" />
+    <ClInclude Include="ObjectHierarchy.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
@@ -170,6 +172,8 @@
     <None Include="Resources\Shaders\modelFragment.glsl" />
     <None Include="Resources\Shaders\modelVertex.glsl" />
     <None Include="Resources\Shaders\NadjaFractalShader.glsl" />
+    <None Include="Resources\Shaders\psxFractalShader.glsl" />
+    <None Include="Resources\Shaders\psxVertexShader.glsl" />
     <None Include="Resources\Shaders\SkyFractalShader.glsl" />
     <None Include="Resources\Shaders\SkyVertexShader.glsl" />
     <None Include="Resources\Shaders\TerrainFractalShader.glsl" />

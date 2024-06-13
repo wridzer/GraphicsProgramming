@@ -39,9 +39,20 @@ void ModelObject::LoadTextures(const char* diffuse, const char* specular, const 
 	aoMap = LoadTexture(ao);
 }
 
+void ModelObject::LoadTextures(const char* diffuse)
+{
+	diffuseMap = LoadTexture(diffuse);
+}
+
+void ModelObject::LoadTextures(const char* diffuse, const char* ao)
+{
+	diffuseMap = LoadTexture(diffuse);
+	aoMap = LoadTexture(ao);
+}
+
 void ModelObject::Draw(glm::vec3 lightDirection, glm::vec3 cameraPosition, glm::mat4 view, glm::mat4 projection)
 {
-	if(shader == nullptr)
+	if (shader == nullptr)
 	{
 		std::cout << "No shader set" << std::endl;
 		return;
@@ -66,16 +77,26 @@ void ModelObject::Draw(glm::vec3 lightDirection, glm::vec3 cameraPosition, glm::
 	glUniform3fv(glGetUniformLocation(shader->ID, "lightDirection"), 1, glm::value_ptr(lightDirection));
 	glUniform3fv(glGetUniformLocation(shader->ID, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, diffuseMap);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specularMap);
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, normalMap);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, roughnessMap);
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, aoMap);
+	if (diffuseMap != 0) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, diffuseMap);
+	}
+	if (specularMap != 0) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, specularMap);
+	}
+	if (normalMap != 0) {
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, normalMap);
+	}
+	if (roughnessMap != 0) {
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, roughnessMap);
+	}
+	if (aoMap != 0) {
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, aoMap);
+	}
 
 	model->Draw(shader->ID);
 }

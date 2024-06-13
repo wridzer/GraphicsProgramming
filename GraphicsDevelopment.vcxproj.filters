@@ -33,8 +33,8 @@
     <ClCompile Include="ModelObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NadjaFractalShader.glsl">
-      <Filter>Source Files\Resources\Shaders</Filter>
+    <ClCompile Include="ObjectHierarchy.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -52,6 +52,9 @@
     </ClInclude>
     <ClInclude Include="ModelObject.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectHierarchy.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -77,6 +80,13 @@
       <Filter>Source Files\Resources\Shaders</Filter>
     </None>
     <None Include="Resources\Shaders\VertexShader.glsl">
+      <Filter>Source Files\Resources\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\NadjaFractalShader.glsl" />
+    <None Include="Resources\Shaders\psxVertexShader.glsl">
+      <Filter>Source Files\Resources\Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\psxFractalShader.glsl">
       <Filter>Source Files\Resources\Shaders</Filter>
     </None>
   </ItemGroup>

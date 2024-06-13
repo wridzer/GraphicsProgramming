@@ -1,7 +1,7 @@
 #version 330 core
 out vec4 FragColor;
 
-in vec2 TexCoords;
+noperspective in vec2 TexCoords;
 in vec3 Normals;
 in vec4 FragPos;
 
@@ -31,7 +31,7 @@ void main()
     vec4 diffuse = texture(texture_diffuse1, TexCoords);
     vec4 specTex = texture(texture_specular1, TexCoords);
 
-    float light = max(dot(-lightDirection, Normals), 0.0);
+    float light = max(dot(-lightDirection, Normals), 1.0);
 
     vec3 viewDir = normalize(FragPos.rgb - cameraPosition);
     vec3 refl = reflect(lightDirection, Normals);
