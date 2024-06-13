@@ -5,27 +5,45 @@ layout(location = 2) in vec2 aTexCoords;
 
 noperspective out vec2 TexCoords;
 out vec3 Normals;
+out vec4 DebugColor;
 
 uniform mat4 world;
 uniform mat4 view;
 uniform mat4 projection;
 
+bool in_frustum(mat4 M, vec3 p) {
+    vec4 Pclip = M * vec4(p, 1.);
+    return abs(Pclip.x) < Pclip.w && 
+            abs(Pclip.y) < Pclip.w && 
+            0 < Pclip.z && 
+            Pclip.z < Pclip.w;
+}
+
 void main()
 {
-    // Transform vertex by the model, view, and projection matrices
-    vec4 pos = projection * view * world * vec4(aPos, 1.0f);
+    mat4 MVP = projection * view * world;
+    vec4 worldPos = world * vec4(aPos, 1.0);
+    vec4 viewPos = view * worldPos;
+    vec4 projPos = projection * viewPos;
 
-    // Divide by W to get Normalized Device Coordinates
-    pos.xyz /= pos.w;
+    if(projPos.w < 0.0) {
+		projPos.w *= -1.0;
+	}
 
-    // Convert to screen coordinates, add half-pixel bias, and truncate
-    pos.xy = floor((pos.xy + vec2(1.0f, 1.0f)) * vec2(320.0f, 240.0f) * 0.5f + vec2(0.5f, 0.5f));
+    // Perspective divide to get NDC
+    vec3 ndc = projPos.xyz / projPos.w;
 
-    // Convert back to -1.0 to 1.0 range
-    pos.xy = pos.xy / vec2(320.0f, 240.0f) / 0.5f - vec2(1.0f, 1.0f);
+    // Convert to screen coordinates
+    vec2 screenPos = (ndc.xy + vec2(1.0, 1.0)) * vec2(320.0, 240.0) * 0.5;
 
-    // Output the final vertex position
-    gl_Position = vec4(pos.xyz, 1.0f);
+    // Apply half-pixel bias and truncate to simulate PSX precision
+    vec2 truncatedScreenPos = floor(screenPos + vec2(0.5, 0.5));
+
+    // Convert back to NDC range
+    vec2 newNDC = truncatedScreenPos / vec2(320.0, 240.0) * 2.0 - vec2(1.0, 1.0);
+
+    // Set final vertex position
+    gl_Position = vec4(newNDC, ndc.z, 1.0);
 
     // Pass the texture coordinate to the fragment shader
     TexCoords = aTexCoords;

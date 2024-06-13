@@ -35,7 +35,7 @@ ObjectHierarchy::ObjectHierarchy()
 			"Resources/Models/road/road.obj",
 			"Resources/Models/road/textures/imgonline-com-ua-pixelizationqJrcMp70EhTY.jpeg",
 			shader,
-			glm::vec3(0.0f, 0.0f, i * 6.3f),
+			glm::vec3(10.0f, 0.0f, i * 6.3f + 10.0f),
 			glm::vec3(0.0f, 0.0f, 0.0f),
 			glm::vec3(1.0f, 1.0f, 1.0f)
 		);
@@ -48,7 +48,7 @@ ObjectHierarchy::ObjectHierarchy()
 		"Resources/Models/nissan_skyline_r32/skyline.obj",
 		"Resources/Models/nissan_skyline_r32/textures/r32_pixel_art_texture.png",
 		shader,
-		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(10.0f, 1.0f, 10.0f),
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f, 1.0f, 1.0f)
 	);
