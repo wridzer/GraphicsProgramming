@@ -84,7 +84,6 @@ int main()
     int result = init(window);
     if (result != 0) return result;
 
-
     // Skybox
     Shader SkyboxShader("Resources/Shaders/SkyVertexShader.glsl", "Resources/Shaders/SkyFractalShader.glsl");
     SkyboxShader.use();
@@ -98,7 +97,23 @@ int main()
     "Resources/Textures/skybox/Classic Land/back.png"
     };
     unsigned int cubemapTexture = loadCubemap(faces);
-    stbi_set_flip_vertically_on_load(true);
+
+    // Terrain
+    Shader terrainShader("Resources/Shaders/TerrainVertexShader.glsl", "Resources/Shaders/TerrainFractalShader.glsl");
+    terrainShader.use();
+    terrainVAO = GeneratePlane("Resources/Textures/Heightmap1.png", heightmapTexture, GL_RGBA, 4, 300.0f, 5.0f, terrainIndexCount, heightmapID);
+    dirtTexture = TextureFromFile("dirt.jpg", "Resources/Textures", false);
+    grassTexture = TextureFromFile("grass.png", "Resources/Textures", false);
+    rockTexture = TextureFromFile("rock.jpg", "Resources/Textures", false);
+    snowTexture = TextureFromFile("snow.jpg", "Resources/Textures", false);
+    sandTexture = TextureFromFile("sand.jpg", "Resources/Textures", false);
+    glUniform1i(glGetUniformLocation(terrainShader.ID, "mainTex"), 0);
+    glUniform1i(glGetUniformLocation(terrainShader.ID, "normalTex"), 1);
+    glUniform1i(glGetUniformLocation(terrainShader.ID, "dirt"), 2);
+    glUniform1i(glGetUniformLocation(terrainShader.ID, "grass"), 3);
+    glUniform1i(glGetUniformLocation(terrainShader.ID, "rock"), 4);
+    glUniform1i(glGetUniformLocation(terrainShader.ID, "snow"), 5);
+    glUniform1i(glGetUniformLocation(terrainShader.ID, "sand"), 6);
 
     // Player
     stbi_set_flip_vertically_on_load(false);
@@ -141,6 +156,7 @@ int main()
 
         // rendering
         RenderSkybox(SkyboxShader, cubemapTexture);
+        RenderTerrain(terrainShader);
         for (size_t i = 0; i < objectVec.size(); i++)
         {
             //objectVec[i]->rot = glm::vec3(0.0f, -time, 0.0f);
@@ -439,13 +455,12 @@ void RenderTerrain(Shader& terrainShader) {
 
     // Set up terrain
     glm::mat4 world = glm::mat4(1.0f);
+    world = glm::translate(world, glm::vec3(-1000.0f, -0.2f, -1000.0f));
 
     glUniformMatrix4fv(glGetUniformLocation(terrainShader.ID, "world"), 1, GL_FALSE, glm::value_ptr(world));
     glUniformMatrix4fv(glGetUniformLocation(terrainShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(terrainShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-    float t = glfwGetTime();
-    lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
     glUniform3fv(glGetUniformLocation(terrainShader.ID, "lightDirection"), 1, glm::value_ptr(lightDirection));
     glUniform3fv(glGetUniformLocation(terrainShader.ID, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
 

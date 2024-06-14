@@ -38,8 +38,8 @@ void main()
     float dist = length(pixelCoord.rgb - cameraPosition);
     float uvLerp = clamp((dist - 250) / 150, -1.0, 1.0) * 0.5 + 0.5;
 
-    float sg = clamp((height - 50) / 10, -1.0, 1.0) * 0.5 + 0.5;
-    float gd = clamp((height - 100) / 10, -1.0, 1.0) * 0.5 + 0.5;
+    float gs = clamp((height - 50) / 10, -1.0, 1.0) * 0.5 + 0.5;
+    float sd = clamp((height - 100) / 10, -1.0, 1.0) * 0.5 + 0.5;
     float dr = clamp((height - 150) / 10, -1.0, 1.0) * 0.5 + 0.5;
     float rd = clamp((height - 200) / 10, -1.0, 1.0) * 0.5 + 0.5;
 
@@ -61,7 +61,7 @@ void main()
     vec3 snowColor = lerp(snowColorClose, snowColorFar, uvLerp);
     vec3 sandColor = lerp(sandColorClose, sandColorFar, uvLerp);
 
-    vec3 diffuse = lerp(lerp(lerp(lerp(sandColor, grassColor, sg), dirtColor, gd), rockColor, dr), snowColor, rd);
+    vec3 diffuse = lerp(lerp(lerp(lerp(grassColor, sandColor, gs), dirtColor, sd), rockColor, dr), snowColor, rd);
 
     // Fog
     float fog = pow( clamp((dist - 250) / 1000, 0.0, 1.0), 2);
