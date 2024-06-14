@@ -17,7 +17,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, float deltaTime);
 int init(GLFWwindow*& window);
 void CreateCube();
-unsigned int loadTexture(const char* path, int comp = 0);
 void CheckGLError(const std::string& location);
 unsigned int GeneratePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
 void RenderSkybox(Shader &skyboxShader);
@@ -142,7 +141,6 @@ int main()
         }
         car->Draw(lightDirection, cameraPosition, view, projection);
 
-        objectVec[0]->rot = glm::vec3(0.0f, 1.0f * globalTime, 0.0f);
         // glfw: swap buffers and poll IO events
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -452,44 +450,6 @@ void CreateCube()
     //glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-unsigned int loadTexture(const char* path, int comp)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    int width, height, numChannels;
-    unsigned char* data = stbi_load(path, &width, &height, &numChannels, comp);
-    if (data)
-    {
-        if(comp != 0)
-            numChannels = comp ;
-        GLenum format = NULL;
-		if(numChannels == 1)
-			format = GL_RED;
-		else if(numChannels == 3)
-			format = GL_RGB;
-		else if(numChannels == 4)
-			format = GL_RGBA;
-
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-    else
-    {
-		std::cout << "Failed to load texture" << std::endl;
-    }
-
-    stbi_image_free(data);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    return textureID;
-}
-
 void RenderSkybox(Shader &skyboxShader) {
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH);
@@ -685,28 +645,42 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
     if (data)
     {
         GLenum format;
+
         if (nrComponents == 1)
             format = GL_RED;
         else if (nrComponents == 3)
             format = GL_RGB;
         else if (nrComponents == 4)
             format = GL_RGBA;
+        else
+        {
+            stbi_image_free(data);
+            return 0;
+        }
 
         glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
 
+        // Set texture parameters
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        // Upload texture data
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+
+
+        // Generate mipmaps
+        glGenerateMipmap(GL_TEXTURE_2D);
 
         stbi_image_free(data);
     }
     else
     {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
+        std::cout << "Texture failed to load at path: " << filename << std::endl;
         stbi_image_free(data);
+        return 0;
     }
 
     return textureID;

@@ -16,9 +16,9 @@ ObjectHierarchy::ObjectHierarchy()
 
 		ModelObject* building = CreateModelObject(
 			shader,
-			"Resources/Models/buildings/building1.obj", //2, 3, 7, 9
+			buildingPath.c_str(),
 			"",
-			glm::vec3(10.0f, 0.0f, i * 50.0f),
+			glm::vec3(-15.0f, 0.0f, i * 50.0f),
 			glm::vec3(0.0f, glm::radians(90.0f), 0.0f)
 		);
 		objects.push_back(building);

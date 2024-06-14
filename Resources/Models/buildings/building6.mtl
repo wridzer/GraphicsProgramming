@@ -1,5 +1,15 @@
-# Blender 4.1.1 MTL File: 'None'
+# Blender 4.1.1 MTL File: 'buildings.blend'
 # www.blender.org
+
+newmtl BrickSmallBrown
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd textures/BrickSmallBrown.jpg
 
 newmtl ConcreteBare
 Ns 0.000000
@@ -21,7 +31,7 @@ d 1.000000
 illum 1
 map_Kd textures/Roof_tiles.jpg
 
-newmtl Shops_19
+newmtl Shops_28
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.000000 0.000000 0.000000
@@ -29,9 +39,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 1
-map_Kd textures/Shops_19.png
+map_Kd textures/Shops_28.png
 
-newmtl Shops_20
+newmtl Shops_29
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.000000 0.000000 0.000000
@@ -39,9 +49,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 1
-map_Kd textures/Shops_20.png
+map_Kd textures/Shops_29.png
 
-newmtl Shops_21
+newmtl Shops_30
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.000000 0.000000 0.000000
@@ -49,9 +59,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 1
-map_Kd textures/Shops_21.png
+map_Kd textures/Shops_30.png
 
-newmtl Shops_22
+newmtl Shops_31
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.000000 0.000000 0.000000
@@ -59,9 +69,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 1
-map_Kd textures/Shops_22.png
+map_Kd textures/Shops_31.png
 
-newmtl brick_modern_01
+newmtl building_07
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.000000 0.000000 0.000000
@@ -69,14 +79,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 1
-map_Kd textures/brick_modern_01.jpg
-
-newmtl building_03
-Ns 0.000000
-Ka 1.000000 1.000000 1.000000
-Ks 0.000000 0.000000 0.000000
-Ke 0.000000 0.000000 0.000000
-Ni 1.500000
-d 1.000000
-illum 1
-map_Kd textures/building_03.jpg
+map_Kd textures/building_07.jpg
