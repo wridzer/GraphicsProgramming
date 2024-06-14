@@ -22,6 +22,7 @@ void CheckGLError(const std::string& location);
 unsigned int GeneratePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
 void RenderSkybox(Shader &skyboxShader);
 void RenderTerrain(Shader& skyboxShader);
+void UpdateCamera();
 
 // Window callbacks
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -33,6 +34,7 @@ bool keys[1024];
 // Global positions
 glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
 glm::vec3 cameraPosition = glm::vec3(-10.0f, 5.0f, 5.0f);
+glm::vec3 cameraOffset = glm::vec3(0.0f, 3.0f, -12.0f);
 
 // Camera variables
 float lastX = SCR_WIDTH / 2.0f;
@@ -42,6 +44,10 @@ float fov = 45.0f;
 float sensitivity = 15.0f;
 glm::quat camQuat = glm::quat(glm::vec3(0, 0, 0));
 float camYaw, camPitch;
+// Camera smoothing variables
+glm::vec3 smoothedCameraPosition = glm::vec3(0.0f);
+glm::quat smoothedCameraRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+float cameraLag = 0.1f; // The lower the value, the more laggy the camera is
 
 // Global variables
 unsigned int boxVAO, boxEBO;
@@ -54,7 +60,21 @@ unsigned int terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
 unsigned char* heightmapTexture;
 unsigned int dirtTexture, grassTexture, rockTexture, snowTexture, sandTexture;
 
+// Car physics variables
+glm::vec3 carVelocity = glm::vec3(0.0f);
+float carMass = 1430.0f;
+float horsepower = 276.0f;
+float maxForce = (horsepower * 745.7f); // Force applied in Newtons
+float accelerationRate = maxForce / carMass * 0.07f; // Adjusted acceleration
+float baseTurnRate = 2.0f; // Base turn rate
+float forwardFriction = 0.3f; // Friction coefficient for forward movement
+float lateralFriction = 1.0f; // Friction for lateral movement to balance sliding
+
 // Objects
+ModelObject* car;
+glm::quat carQuat = glm::quat(glm::vec3(0, 0, 0));
+float carSpeed = 5.0f;
+float carTurnSpeed = 2.0f;
 std::vector<ModelObject*> objectVec = std::vector<ModelObject*>();
 
 int main()
@@ -74,6 +94,19 @@ int main()
     // Skybox
     SkyboxShader.use();
     CreateCube();
+
+    // Player
+    stbi_set_flip_vertically_on_load(false);
+    glDisable(GL_CULL_FACE);
+    Shader playerShader("Resources/Shaders/psxVertexShader.glsl", "Resources/Shaders/psxFractalShader.glsl");
+    car = new ModelObject();
+    car->pos = glm::vec3(0.0f, 0.7f, 10.0f);
+    car->rot = glm::vec3(0.0f, 0.0f, 0.0f);
+    car->scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    car->LoadModel("Resources/Models/nissan_skyline_r32/skyline.obj");
+    car->LoadTextures("Resources/Models/nissan_skyline_r32/textures/r32_pixel_art_texture.png");
+    car->SetShader(&playerShader);
+    cameraPosition = car->pos + cameraOffset;
 
     // Create objects
     ObjectHierarchy objectHierarchy = ObjectHierarchy();
@@ -95,6 +128,7 @@ int main()
 
         // input
         processInput(window, deltaTime);
+        UpdateCamera();
 
         // Rendering
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -108,7 +142,7 @@ int main()
             //objectVec[i]->rot = glm::vec3(0.0f, -time, 0.0f);
             objectVec[i]->Draw(lightDirection, cameraPosition, view, projection);
         }
-
+        car->Draw(lightDirection, cameraPosition, view, projection);
         // glfw: swap buffers and poll IO events
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -123,42 +157,92 @@ int main()
     return 0;
 }
 
+void UpdateCamera() {
+    // Update car position and rotation
+    glm::vec3 carForward = carQuat * glm::vec3(0, 0, 1); // Forward direction is +Z
+    glm::vec3 targetCameraPosition = car->pos + carForward * cameraOffset.z + glm::vec3(0, cameraOffset.y, 0);
+    glm::quat targetCameraRotation = carQuat;
+
+    // Interpolate camera position and rotation for lag effect
+    smoothedCameraPosition = glm::mix(smoothedCameraPosition, targetCameraPosition, cameraLag);
+    smoothedCameraRotation = glm::slerp(smoothedCameraRotation, targetCameraRotation, cameraLag);
+
+    // Update view matrix with smoothed camera position and orientation
+    glm::vec3 camForward = smoothedCameraRotation * glm::vec3(0, 0, 1); // Look direction is +Z
+    glm::vec3 camUp = smoothedCameraRotation * glm::vec3(0, 1, 0); // Up direction is +Y
+    view = glm::lookAt(smoothedCameraPosition, smoothedCameraPosition + camForward, camUp);
+}
+
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void processInput(GLFWwindow* window, float deltaTime)
 {
     if (keys[GLFW_KEY_ESCAPE])
         glfwSetWindowShouldClose(window, true);
 
-    bool camChanged = false;
-    if(keys[GLFW_KEY_W])
+    glm::vec3 carAcceleration = glm::vec3(0.0f);
+    bool carMoved = false;
+
+    if (keys[GLFW_KEY_W])
     {
-        cameraPosition += camQuat * glm::vec3(0, 0, 1) * sensitivity * deltaTime;
-        camChanged = true;
+        carAcceleration += carQuat * glm::vec3(0, 0, accelerationRate); // Forward acceleration
+        carMoved = true;
     }
-    if(keys[GLFW_KEY_S])
+    if (keys[GLFW_KEY_S])
     {
-        cameraPosition += camQuat * glm::vec3(0, 0, -1) * sensitivity * deltaTime;
-        camChanged = true;
+        carAcceleration += carQuat * glm::vec3(0, 0, -accelerationRate); // Backward acceleration
+        carMoved = true;
     }
-    if (keys[GLFW_KEY_A])
+
+    // Calculate friction
+    glm::vec3 forwardDir = carQuat * glm::vec3(0, 0, 1);
+    glm::vec3 lateralDir = carQuat * glm::vec3(1, 0, 0);
+
+    // Decompose velocity into forward and lateral components
+    float forwardSpeed = glm::dot(carVelocity, forwardDir);
+    float lateralSpeed = glm::dot(carVelocity, lateralDir);
+
+    // Apply friction differently based on the direction of motion
+    glm::vec3 forwardVelocity = forwardDir * forwardSpeed;
+    glm::vec3 lateralVelocity = lateralDir * lateralSpeed;
+
+    forwardVelocity *= (1.0f - forwardFriction * deltaTime);
+    lateralVelocity *= (1.0f - lateralFriction * deltaTime);
+
+    carVelocity = forwardVelocity + lateralVelocity;
+
+    // Update car velocity and position
+    carVelocity += carAcceleration * deltaTime;
+    car->pos += carVelocity * deltaTime;
+
+    // Calculate speed-dependent turn rate
+    float speed = glm::length(carVelocity);
+    float turnRate = baseTurnRate * glm::clamp(speed / 15.0f, 0.0f, 1.0f); // Adjusted scaling for slower turning response
+
+    // Handle turning only if the car is moving
+    if (speed > 0.1f)
     {
-        cameraPosition += camQuat * glm::vec3(1, 0, 0) * sensitivity * deltaTime;
-        camChanged = true;
+        if (keys[GLFW_KEY_A])
+        {
+            carQuat *= glm::quat(glm::vec3(0, turnRate * deltaTime, 0));
+        }
+        if (keys[GLFW_KEY_D])
+        {
+            carQuat *= glm::quat(glm::vec3(0, -turnRate * deltaTime, 0));
+        }
     }
-    if (keys[GLFW_KEY_D])
-    {
-        cameraPosition += camQuat * glm::vec3(-1, 0, 0) * sensitivity * deltaTime;
-        camChanged = true;
-    }
+
+    // Update car rotation
+    car->rot = glm::eulerAngles(carQuat);
+
     if(keys[GLFW_KEY_SPACE])
     {
         cameraPosition += camQuat * glm::vec3(0, 1, 0) * sensitivity * deltaTime;
-        camChanged = true;
+        carMoved = true;
     }
     if(keys[GLFW_KEY_LEFT_CONTROL])
     {
         cameraPosition += camQuat * glm::vec3(0, -1, 0) * sensitivity * deltaTime;
-        camChanged = true;
+        carMoved = true;
     }
     if (keys[GLFW_KEY_Q])
     {
@@ -169,13 +253,6 @@ void processInput(GLFWwindow* window, float deltaTime)
 	{
 		sensitivity += 0.5f;
 	}
-
-    if (camChanged) {
-        glm::vec3 camForward = camQuat * glm::vec3(0, 0, 1);
-        glm::vec3 camUp = camQuat * glm::vec3(0, 1, 0);
-
-        view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
-    }
 
 }
 
@@ -420,7 +497,7 @@ void RenderSkybox(Shader &skyboxShader) {
 
     // Set up skybox
     glm::mat4 world = glm::mat4(1.0f);
-    world = glm::translate(world, cameraPosition);
+    world = glm::translate(world, smoothedCameraPosition);
     world = glm::scale(world, glm::vec3(10.0f, 10.0f, 10.0f));
 
     glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "world"),      1, GL_FALSE, glm::value_ptr(world));

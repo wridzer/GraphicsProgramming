@@ -11,14 +11,6 @@ uniform mat4 world;
 uniform mat4 view;
 uniform mat4 projection;
 
-bool in_frustum(mat4 M, vec3 p) {
-    vec4 Pclip = M * vec4(p, 1.);
-    return abs(Pclip.x) < Pclip.w && 
-            abs(Pclip.y) < Pclip.w && 
-            0 < Pclip.z && 
-            Pclip.z < Pclip.w;
-}
-
 void main()
 {
     mat4 MVP = projection * view * world;

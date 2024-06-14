@@ -11,12 +11,12 @@ class ObjectHierarchy
 		~ObjectHierarchy();
 
 		ModelObject* CreateModelObject(
-			const char* path,
-			const char* texturePath,
 			Shader* shader,
-			glm::vec3 pos,
-			glm::vec3 rot,
-			glm::vec3 scale
+			const char* path,
+			const char* texturePath = "",
+			glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f),
+			glm::vec3 rot = glm::vec3(0.0f, 0.0f, 0.0f),
+			glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f)
 		);
 
 		std::vector<ModelObject*> objects;
