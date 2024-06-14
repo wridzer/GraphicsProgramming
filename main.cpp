@@ -17,11 +17,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, float deltaTime);
 int init(GLFWwindow*& window);
 void CreateCube();
-void CheckGLError(const std::string& location);
+void RenderSkybox(Shader &skyboxShader, unsigned int cubemapTexture);
 unsigned int GeneratePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
-void RenderSkybox(Shader &skyboxShader);
 void RenderTerrain(Shader& skyboxShader);
+void CheckGLError(const std::string& location);
 void UpdateCamera();
+unsigned int loadCubemap(vector<std::string> faces);
 
 // Window callbacks
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -48,16 +49,19 @@ glm::vec3 smoothedCameraPosition = glm::vec3(0.0f);
 glm::quat smoothedCameraRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 float cameraLag = 0.1f; // The lower the value, the more laggy the camera is
 
-// Global variables
-unsigned int boxVAO, boxEBO;
+// Skybox variables
+unsigned int skyboxVAO, skyboxVBO;
 int boxSize, boxNumIndeces;
-glm::mat4 view, projection;
-float globalTime = 0.0f;
 
 // Terrain variables
 unsigned int terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
 unsigned char* heightmapTexture;
 unsigned int dirtTexture, grassTexture, rockTexture, snowTexture, sandTexture;
+
+
+// Global variables
+glm::mat4 view, projection;
+float globalTime = 0.0f;
 
 // Car physics variables
 glm::vec3 carVelocity = glm::vec3(0.0f);
@@ -80,17 +84,21 @@ int main()
     int result = init(window);
     if (result != 0) return result;
 
-    stbi_set_flip_vertically_on_load(true);
-
-    // build and compile our shader program
-    Shader SkyboxShader("Resources/Shaders/SkyVertexShader.glsl", "Resources/Shaders/SkyFractalShader.glsl");
-    Shader TerrainShader("Resources/Shaders/TerrainVertexShader.glsl", "Resources/Shaders/TerrainFractalShader.glsl");
-    Shader modelShader("Resources/Shaders/modelVertex.glsl", "Resources/Shaders/modelFragment.glsl");
-    Shader nadjaShader("Resources/Shaders/modelVertex.glsl", "Resources/Shaders/NadjaFractalShader.glsl");
 
     // Skybox
+    Shader SkyboxShader("Resources/Shaders/SkyVertexShader.glsl", "Resources/Shaders/SkyFractalShader.glsl");
     SkyboxShader.use();
     CreateCube();
+    std::vector<std::string> faces{
+    "Resources/Textures/skybox/Classic Land/right.png",
+    "Resources/Textures/skybox/Classic Land/left.png",
+    "Resources/Textures/skybox/Classic Land/up.png",
+    "Resources/Textures/skybox/Classic Land/down.png",
+    "Resources/Textures/skybox/Classic Land/front.png",
+    "Resources/Textures/skybox/Classic Land/back.png"
+    };
+    unsigned int cubemapTexture = loadCubemap(faces);
+    stbi_set_flip_vertically_on_load(true);
 
     // Player
     stbi_set_flip_vertically_on_load(false);
@@ -132,8 +140,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // rendering
-        RenderSkybox(SkyboxShader);
-        RenderTerrain(TerrainShader);
+        RenderSkybox(SkyboxShader, cubemapTexture);
         for (size_t i = 0; i < objectVec.size(); i++)
         {
             //objectVec[i]->rot = glm::vec3(0.0f, -time, 0.0f);
@@ -147,7 +154,7 @@ int main()
     }
 
     // Cleanup
-    glDeleteVertexArrays(1, &boxVAO);
+    glDeleteVertexArrays(1, &skyboxVAO);
     //glDeleteBuffers(1, &VBO);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
@@ -340,151 +347,86 @@ int init(GLFWwindow* &window)
         glfwTerminate();
         return -2;
     }
-
+    glEnable(GL_DEPTH_TEST);
     return 0;
 }
 
 void CreateCube()
 {
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    float vertices[] = {
-        // positions            //colors            // tex coords   // normals          //tangents      //bitangents
-        0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-        0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-        -0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-        -0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
+    float skyboxVertices[] = {
+        // positions          
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
 
-        0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
-        0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   1.f, 0.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
 
-        0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
-        -0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
 
-        -0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   0.f, 0.f,      -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
-        -0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   0.f, 1.f,      -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
 
-        -0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   0.f, 1.f,      0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
-        0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,      0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
 
-        -0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-        -0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-
-        0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
-        -0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
-
-        -0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
-        -0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   1.f, 1.f,       -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
-
-        -0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
-        0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
-
-        0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
-        0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   0.f, 0.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
-
-        0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-        0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
     };
 
-    unsigned int indices[] = {  // note that we start from 0!
-        // DOWN
-        0, 1, 2,   // first triangle
-        0, 2, 3,    // second triangle
-        // BACK
-        14, 6, 7,   // first triangle
-        14, 7, 15,    // second triangle
-        // RIGHT
-        20, 4, 5,   // first triangle
-        20, 5, 21,    // second triangle
-        // LEFT
-        16, 8, 9,   // first triangle
-        16, 9, 17,    // second triangle
-        // FRONT
-        18, 10, 11,   // first triangle
-        18, 11, 19,    // second triangle
-        // UP
-        22, 12, 13,   // first triangle
-        22, 13, 23,    // second triangle
-    };
-
-    int stride = (3 + 3 + 2 + 3 + 3 + 3) * sizeof(float);
-
-    boxSize = sizeof(vertices) / stride;
-    boxNumIndeces = sizeof(indices) / sizeof(int);
-
-    unsigned int VBO;
-    glGenVertexArrays(1, &boxVAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(boxVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &boxEBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, boxEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+    // skybox VAO
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-
-    // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // uv attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    // normal attribute
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, (void*)(8 * sizeof(float)));
-    glEnableVertexAttribArray(3);
-
-    // tan attribute
-    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, stride, (void*)(11 * sizeof(float)));
-    glEnableVertexAttribArray(4);
-
-    // bitan attribute
-    glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, stride, (void*)(14 * sizeof(float)));
-    glEnableVertexAttribArray(5);
-
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 }
 
-void RenderSkybox(Shader &skyboxShader) {
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH);
-    glDisable(GL_DEPTH_TEST);
-
+void RenderSkybox(Shader& skyboxShader, unsigned int cubemapTexture) {
+    glDepthFunc(GL_LEQUAL); // Change depth function so skybox is drawn at the farthest depth
+    glDepthMask(GL_FALSE);
     skyboxShader.use();
 
-    // Set up skybox
-    glm::mat4 world = glm::mat4(1.0f);
-    world = glm::translate(world, smoothedCameraPosition);
-    world = glm::scale(world, glm::vec3(10.0f, 10.0f, 10.0f));
+    // Remove the translation part of the view matrix
+    glm::mat4 view = glm::mat4(glm::mat3(glm::lookAt(smoothedCameraPosition, smoothedCameraPosition + smoothedCameraRotation * glm::vec3(0, 0, -1), smoothedCameraRotation * glm::vec3(0, 1, 0))));
+    glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
-    glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "world"),      1, GL_FALSE, glm::value_ptr(world));
-    glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "view"),       1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-    
-    glUniform3fv(glGetUniformLocation(skyboxShader.ID, "lightDirection"), 1, glm::value_ptr(lightDirection));
-    glUniform3fv(glGetUniformLocation(skyboxShader.ID, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+    skyboxShader.setMat4("view", view);
+    skyboxShader.setMat4("projection", projection);
 
-    //Rendering
-    glBindVertexArray(boxVAO);
-    glDrawElements(GL_TRIANGLES, boxNumIndeces, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(skyboxVAO);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
 
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH);
-    glEnable(GL_DEPTH_TEST);
-}
-
-void CheckGLError(const std::string& location)
-{
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR)
-    {
-        std::cout << "OpenGL error at " << location << ": " << err << std::endl;
-    }
+    glDepthFunc(GL_LESS); // Set depth function back to default
+    glDepthMask(GL_TRUE);
 }
 
 void RenderTerrain(Shader& terrainShader) {
@@ -527,7 +469,7 @@ void RenderTerrain(Shader& terrainShader) {
     glDrawElements(GL_TRIANGLES, terrainIndexCount, GL_UNSIGNED_INT, 0);
 }
 
-unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID) {
+unsigned int GeneratePlane(const char* heightmap, unsigned char*& data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID) {
     int width = 0, height = 0, channels;
     if (heightmap != nullptr && data == nullptr) {
         data = stbi_load(heightmap, &width, &height, &channels, comp);
@@ -543,8 +485,8 @@ unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum f
             glBindTexture(GL_TEXTURE_2D, 0);
         }
         else {
-			std::cout << "Failed to load heightmap" << std::endl;
-		}
+            std::cout << "Failed to load heightmap" << std::endl;
+        }
     }
 
     int stride = 8;
@@ -632,6 +574,15 @@ unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum f
     return VAO;
 }
 
+void CheckGLError(const std::string& location)
+{
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR)
+    {
+        std::cout << "OpenGL error at " << location << ": " << err << std::endl;
+    }
+}
+
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma)
 {
     string filename = string(path);
@@ -682,6 +633,37 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
         stbi_image_free(data);
         return 0;
     }
+
+    return textureID;
+}
+
+unsigned int loadCubemap(std::vector<std::string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return textureID;
 }
