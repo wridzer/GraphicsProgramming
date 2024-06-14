@@ -73,8 +73,6 @@ float lateralFriction = 1.0f; // Friction for lateral movement to balance slidin
 // Objects
 ModelObject* car;
 glm::quat carQuat = glm::quat(glm::vec3(0, 0, 0));
-float carSpeed = 5.0f;
-float carTurnSpeed = 2.0f;
 std::vector<ModelObject*> objectVec = std::vector<ModelObject*>();
 
 int main()
@@ -143,6 +141,8 @@ int main()
             objectVec[i]->Draw(lightDirection, cameraPosition, view, projection);
         }
         car->Draw(lightDirection, cameraPosition, view, projection);
+
+        objectVec[0]->rot = glm::vec3(0.0f, 1.0f * globalTime, 0.0f);
         // glfw: swap buffers and poll IO events
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -216,18 +216,20 @@ void processInput(GLFWwindow* window, float deltaTime)
 
     // Calculate speed-dependent turn rate
     float speed = glm::length(carVelocity);
-    float turnRate = baseTurnRate * glm::clamp(speed / 15.0f, 0.0f, 1.0f); // Adjusted scaling for slower turning response
+    float turnRate = baseTurnRate * glm::clamp(speed / 25.0f, 0.0f, 1.0f); // Adjusted scaling for slower turning response
 
     // Handle turning only if the car is moving
     if (speed > 0.1f)
     {
+        float direction = (forwardSpeed >= 0) ? 1.0f : -1.0f; // Determine direction based on forward speed
+
         if (keys[GLFW_KEY_A])
         {
-            carQuat *= glm::quat(glm::vec3(0, turnRate * deltaTime, 0));
+            carQuat *= glm::quat(glm::vec3(0, direction * turnRate * deltaTime, 0));
         }
         if (keys[GLFW_KEY_D])
         {
-            carQuat *= glm::quat(glm::vec3(0, -turnRate * deltaTime, 0));
+            carQuat *= glm::quat(glm::vec3(0, -direction * turnRate * deltaTime, 0));
         }
     }
 
