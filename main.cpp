@@ -134,7 +134,7 @@ int main()
 
     // Matrices
     view = glm::lookAt(cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 5000.0f);
+    projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.3f, 5000.0f);
 
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -455,7 +455,7 @@ void RenderTerrain(Shader& terrainShader) {
 
     // Set up terrain
     glm::mat4 world = glm::mat4(1.0f);
-    world = glm::translate(world, glm::vec3(-1000.0f, -0.2f, -1000.0f));
+    world = glm::translate(world, glm::vec3(-1000.0f, -0.5f, -1000.0f));
 
     glUniformMatrix4fv(glGetUniformLocation(terrainShader.ID, "world"), 1, GL_FALSE, glm::value_ptr(world));
     glUniformMatrix4fv(glGetUniformLocation(terrainShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
