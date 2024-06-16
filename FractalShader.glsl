@@ -23,7 +23,8 @@ void main()
     // Light
     vec3 lightDir = normalize(lightPosition - pixelCoord);
     float dotproduct = dot(normal, lightDir);
-    float lightValue = max(dotproduct, 0.0f);
+    float shadingAmount = step(borderScale, dotproduct);
+    float lightValue = max(shadingAmount, 0.0f);
 
     // Specular data
     vec3 viewDir = normalize(pixelCoord - cameraPosition);
@@ -33,12 +34,6 @@ void main()
     // Seperate RGB and RGBA
     vec4 outputValue = vec4(color, 1.0f) * texture(mainTex, uv);
     outputValue.rgb = outputValue.rgb * min(lightValue + 0.1, 1.0) + specValue;
-
-    // Cellshading
-    if(dotproduct < 0.0f + borderScale || dotproduct > 1.0f - borderScale )
-	{
-		outputValue = vec4(0, 0, 0, 1);
-	}
 
     FragColor = outputValue;
     //FragColor = vec4(color, 1.0f) * texture(mainTex, uv) * min(lightValue + 0.1, 1.0);
